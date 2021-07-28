@@ -1,6 +1,7 @@
 package gregtech.api.util;
 
 import codechicken.nei.PositionedStack;
+import com.google.common.base.Stopwatch;
 import gregtech.api.GregTech_API;
 import gregtech.api.enums.*;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
@@ -21,9 +22,11 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static gregtech.api.enums.GT_Values.*;
@@ -38,6 +41,7 @@ import static gregtech.api.enums.GT_Values.*;
  * I know this File causes some Errors, because of missing Main Functions, but if you just need to compile Stuff, then remove said erroreous Functions.
  */
 public class GT_Recipe implements Comparable<GT_Recipe> {
+    protected static final Logger log = LogManager.getLogger(GT_Recipe.class);
     public static volatile int VERSION = 509;
     /**
      * If you want to change the Output, feel free to modify or even replace the whole ItemStack Array, for Inputs, please add a new Recipe, because of the HashMaps.
@@ -365,8 +369,256 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
 
     public static boolean GTppRecipeHelper;
 
-    public boolean isRecipeInputEqual(boolean aDecreaseStacksizeBySuccess, boolean aDontCheckStackSizes, FluidStack[] aFluidInputs, ItemStack... aInputs) {
+    private static final Stopwatch printStopwatch = Stopwatch.createStarted();
+    private static final Stopwatch stopwatch = Stopwatch.createUnstarted();
+    private static final int HISTORY_SIZE = 1024;
+    private static final ArrayList<Long> currTimes = new ArrayList<>(HISTORY_SIZE);
+    private static final ArrayList<Long> newTimes = new ArrayList<>(HISTORY_SIZE);
+    private static int historyPos = 0;
+    private static long currTotal = 0;
+    private static long newTotal = 0;
+    private static long decreaseTotal = 0;
+    private static long dontDecreaseTotal = 0;
+    private static final Object LOCK = new Object();
 
+    private static FluidStack[] copyFluidStack(FluidStack[] input) {
+        if (input == null) {
+            return null;
+        }
+        FluidStack[] output = new FluidStack[input.length];
+        for (int i = 0; i < input.length; i++) {
+            if (input[i] != null) {
+                output[i] = input[i].copy();
+            }
+        }
+        return output;
+    }
+    private static ItemStack[] copyItemStack(ItemStack[] input) {
+        if (input == null) {
+            return null;
+        }
+        ItemStack[] output = new ItemStack[input.length];
+        for (int i = 0; i < input.length; i++) {
+            if (input[i] != null) {
+                output[i] = input[i].copy();
+            }
+        }
+        return output;
+    }
+
+    private static boolean amountsEqual(FluidStack[] a, FluidStack[] b) {
+        if (a == null) {
+            return true;
+        }
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != null && a[i].amount != b[i].amount) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private static boolean amountsEqual(ItemStack[] a, ItemStack[] b) {
+        if (a == null) {
+            return true;
+        }
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != null && a[i].stackSize != b[i].stackSize) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isRecipeInputEqual(boolean aDecreaseStacksizeBySuccess, boolean aDontCheckStackSizes, FluidStack[] aFluidInputs, ItemStack... aInputs) {
+        if (!GregTech_API.sPostloadFinished) {
+            return newImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, aFluidInputs, aInputs);
+        }
+        synchronized (LOCK) {
+            boolean printTimes = printStopwatch.elapsed(TimeUnit.SECONDS) >= 1;
+            FluidStack[] origFluidInputs = copyFluidStack(aFluidInputs);
+            ItemStack[] origInputs = copyItemStack(aInputs);
+            FluidStack[] currFluidInputs = copyFluidStack(aFluidInputs);
+            ItemStack[] currInputs = copyItemStack(aInputs);
+
+            if (aDecreaseStacksizeBySuccess) {
+                decreaseTotal++;
+            } else {
+                dontDecreaseTotal++;
+            }
+
+            stopwatch.reset().start();
+            boolean currReturn = currImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currFluidInputs, currInputs);
+            long currTime = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
+            currTotal += currTime;
+            if (currTimes.size() > historyPos) {
+                currTimes.set(historyPos, currTime);
+            } else {
+                currTimes.add(currTime);
+            }
+            if (printTimes) {
+                log.error(
+                        String.format(
+                                "[isRecipeInputEqual] Curr impl times: %d ns one run, %.3f ns over %d runs, %.3f ns overall",
+                                currTime, currTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
+                                currTimes.size(), ((double) currTotal) / (decreaseTotal + dontDecreaseTotal)));
+            }
+
+            stopwatch.reset().start();
+            boolean newReturn = newImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, aFluidInputs, aInputs);
+            long newTime = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
+            newTotal += newTime;
+            if (newTimes.size() > historyPos) {
+                newTimes.set(historyPos, newTime);
+            } else {
+                newTimes.add(newTime);
+            }
+            if (printTimes) {
+                log.error(
+                        String.format(
+                                "[isRecipeInputEqual] New impl times: %d ns one run, %.3f ns over %d runs, %.3f ns overall",
+                                newTime, newTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
+                                newTimes.size(), ((double) newTotal) / (decreaseTotal + dontDecreaseTotal)));
+            }
+
+            if (currReturn != newReturn) {
+                log.error(
+                        String.format(
+                                "[isRecipeInputEqual-diff] Got diffs in return (%s, %s, %s, %s) for:\n"
+                                        + "Recipe: [%s], [%s]\nInputs: [%s], [%s]",
+                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn, newReturn,
+                                Arrays.toString(mFluidInputs), Arrays.toString(mInputs),
+                                Arrays.toString(origFluidInputs), Arrays.toString(origInputs)));
+            }
+            if (!amountsEqual(currFluidInputs, aFluidInputs) || !amountsEqual(currInputs, aInputs)) {
+                log.error(
+                        String.format(
+                                "[isRecipeInputEqual-diff] Got diffs in stacks (%s, %s, %s, %s) for:\n"
+                                        + "Recipe: [%s], [%s]\nInputs: [%s], [%s]\nCurr stacks: [%s], [%s]\nNew stacks: [%s], [%s]",
+                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn, newReturn,
+                                Arrays.toString(mFluidInputs), Arrays.toString(mInputs),
+                                Arrays.toString(origFluidInputs), Arrays.toString(origInputs),
+                                Arrays.toString(currFluidInputs), Arrays.toString(currInputs),
+                                Arrays.toString(aFluidInputs), Arrays.toString(aInputs)));
+            }
+
+            historyPos = ++historyPos % HISTORY_SIZE;
+            if (printTimes) {
+                log.error(String.format("[isRecipeInputEqual] Total calls: decrease %d, don't decrease %d", decreaseTotal, dontDecreaseTotal));
+                printStopwatch.reset().start();
+            }
+
+            return newReturn;
+        }
+    }
+
+    public boolean newImpl(boolean aDecreaseStacksizeBySuccess, boolean aDontCheckStackSizes, FluidStack[] aFluidInputs, ItemStack... aInputs) {
+        if (mInputs.length > 0 && aInputs == null) return false;
+        if (mFluidInputs.length > 0 && aFluidInputs == null) return false;
+
+        // We need to handle 0-size recipe ingredients. These are for ingredients that don't get consumed.
+        boolean found;
+        int amt;
+
+        int[] fluidAmounts = null;
+        if (aFluidInputs != null) {
+            // Make a copy of the input amounts, so that we can modify them without changing the original stack.
+            fluidAmounts = new int[aFluidInputs.length];
+            for (int i = 0; i < aFluidInputs.length; i++) {
+                if (aFluidInputs[i] != null) {
+                    fluidAmounts[i] = aFluidInputs[i].amount;
+                }
+            }
+
+            for (FluidStack tFluid : mFluidInputs) {
+                if (tFluid != null) {
+                    found = false;
+                    amt = tFluid.amount;
+                    for (int i = 0; i < aFluidInputs.length; i++) {
+                        FluidStack aFluid = aFluidInputs[i];
+                        if (aFluid != null && aFluid.isFluidEqual(tFluid)) {
+                            found = true;
+                            if (aDontCheckStackSizes || fluidAmounts[i] >= amt) {
+                                fluidAmounts[i] -= amt;
+                                amt = 0;
+                                break;
+                            } else {
+                                amt -= fluidAmounts[i];
+                                fluidAmounts[i] = 0;
+                            }
+                        }
+                    }
+                    if (amt > 0 || !found) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        int[] stackSizes = null;
+        if (aInputs != null) {
+            // Make a copy of the input amounts, so that we can modify them without changing the original stack.
+            stackSizes = new int[aInputs.length];
+            for (int i = 0; i < aInputs.length; i++) {
+                if (aInputs[i] != null) {
+                    stackSizes[i] = aInputs[i].stackSize;
+                }
+            }
+
+            for (ItemStack tStack : mInputs) {
+                ItemStack unified_tStack = GT_OreDictUnificator.get_nocopy(true, tStack);
+                if (unified_tStack != null) {
+                    found = false;
+                    amt = tStack.stackSize;
+                    for (int i = 0; i < aInputs.length; i++) {
+                        ItemStack aStack = aInputs[i];
+                        if (GT_OreDictUnificator.isInputStackEqual(aStack, unified_tStack)) {
+                            if (GTppRecipeHelper) { // remove once the fix is out
+                                if (GT_Utility.areStacksEqual(aStack, Ic2Items.FluidCell.copy(), true) || GT_Utility.areStacksEqual(aStack, ItemList.Tool_DataStick.get(1L), true) || GT_Utility.areStacksEqual(aStack, ItemList.Tool_DataOrb.get(1L), true)) {
+                                    if (!GT_Utility.areStacksEqual(aStack, tStack, false))
+                                        continue;
+                                }
+                            }
+                            found = true;
+                            if (aDontCheckStackSizes || stackSizes[i] >= amt) {
+                                stackSizes[i] -= amt;
+                                amt = 0;
+                                break;
+                            } else {
+                                amt -= stackSizes[i];
+                                stackSizes[i] = 0;
+                            }
+                        }
+                    }
+                    if (amt > 0 || !found) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        if (aDecreaseStacksizeBySuccess) {
+            // Copy modified amounts into the input stacks.
+            if (aFluidInputs != null) {
+                for (int i = 0; i < aFluidInputs.length; i++) {
+                    if (aFluidInputs[i] != null) {
+                        aFluidInputs[i].amount = fluidAmounts[i];
+                    }
+                }
+            }
+
+            if (aInputs != null) {
+                for (int i = 0; i < aInputs.length; i++) {
+                    if (aInputs[i] != null) {
+                         aInputs[i].stackSize = stackSizes[i];
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public boolean currImpl(boolean aDecreaseStacksizeBySuccess, boolean aDontCheckStackSizes, FluidStack[] aFluidInputs, ItemStack... aInputs) {
         if (mInputs.length > 0 && aInputs == null) return false;
         if (mFluidInputs.length > 0 && aFluidInputs == null) return false;
         int amt;

@@ -541,24 +541,25 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
         boolean found;
         int amt;
 
-        int[] fluidAmounts = null;
+        // Array tracking modified fluid amounts. For efficiency, we will lazily initialize this array.
+        // We use Integer so that we can have null as the default value, meaning uninitialized.
+        Integer[] fluidAmounts = null;
         if (aFluidInputs != null) {
-            // Make a copy of the input amounts, so that we can modify them without changing the original stack.
-            fluidAmounts = new int[aFluidInputs.length];
-            for (int i = 0; i < aFluidInputs.length; i++) {
-                if (aFluidInputs[i] != null) {
-                    fluidAmounts[i] = aFluidInputs[i].amount;
-                }
-            }
+            fluidAmounts = new Integer[aFluidInputs.length];
 
             for (FluidStack tFluid : mFluidInputs) {
                 if (tFluid != null) {
                     found = false;
                     amt = tFluid.amount;
+
                     for (int i = 0; i < aFluidInputs.length; i++) {
                         FluidStack aFluid = aFluidInputs[i];
                         if (aFluid != null && aFluid.isFluidEqual(tFluid)) {
                             found = true;
+                            if (fluidAmounts[i] == null) {
+                                fluidAmounts[i] = aFluid.amount;
+                            }
+
                             if (aDontCheckStackSizes || fluidAmounts[i] >= amt) {
                                 fluidAmounts[i] -= amt;
                                 amt = 0;
@@ -569,6 +570,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                             }
                         }
                     }
+
                     if (amt > 0 || !found) {
                         return false;
                     }
@@ -576,21 +578,18 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
             }
         }
 
-        int[] stackSizes = null;
+        // Array tracking modified item stack sizes. For efficiency, we will lazily initialize this array.
+        // We use Integer so that we can have null as the default value, meaning uninitialized.
+        Integer[] stackSizes = null;
         if (aInputs != null) {
-            // Make a copy of the input amounts, so that we can modify them without changing the original stack.
-            stackSizes = new int[aInputs.length];
-            for (int i = 0; i < aInputs.length; i++) {
-                if (aInputs[i] != null) {
-                    stackSizes[i] = aInputs[i].stackSize;
-                }
-            }
+            stackSizes = new Integer[aInputs.length];
 
             for (ItemStack tStack : mInputs) {
                 ItemStack unified_tStack = GT_OreDictUnificator.get_nocopy(true, tStack);
                 if (unified_tStack != null) {
                     found = false;
                     amt = tStack.stackSize;
+
                     for (int i = 0; i < aInputs.length; i++) {
                         ItemStack aStack = aInputs[i];
                         if (GT_OreDictUnificator.isInputStackEqual(aStack, unified_tStack)) {
@@ -600,7 +599,12 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                                         continue;
                                 }
                             }
+
                             found = true;
+                            if (stackSizes[i] == null) {
+                                stackSizes[i] = aStack.stackSize;
+                            }
+
                             if (aDontCheckStackSizes || stackSizes[i] >= amt) {
                                 stackSizes[i] -= amt;
                                 amt = 0;
@@ -611,6 +615,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                             }
                         }
                     }
+
                     if (amt > 0 || !found) {
                         return false;
                     }
@@ -622,7 +627,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
             // Copy modified amounts into the input stacks.
             if (aFluidInputs != null) {
                 for (int i = 0; i < aFluidInputs.length; i++) {
-                    if (aFluidInputs[i] != null) {
+                    if (fluidAmounts[i] != null) {
                         aFluidInputs[i].amount = fluidAmounts[i];
                     }
                 }
@@ -630,7 +635,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
 
             if (aInputs != null) {
                 for (int i = 0; i < aInputs.length; i++) {
-                    if (aInputs[i] != null) {
+                    if (stackSizes[i] != null) {
                          aInputs[i].stackSize = stackSizes[i];
                     }
                 }

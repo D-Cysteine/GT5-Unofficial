@@ -27,7 +27,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static gregtech.api.enums.GT_Values.*;
 
@@ -446,46 +448,66 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                 dontDecreaseTotal++;
             }
 
-            stopwatch.reset().start();
-            boolean currReturn = currImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currFluidInputs, currInputs);
-            long currTime = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-            currTotal += currTime;
-            if (currTimes.size() > historyPos) {
-                currTimes.set(historyPos, currTime);
+            final AtomicBoolean currReturn = new AtomicBoolean();
+            final AtomicBoolean newReturn = new AtomicBoolean();
+            final AtomicLong currTime = new AtomicLong();
+            final AtomicLong newTime = new AtomicLong();
+            Runnable runCurr = () -> {
+                stopwatch.reset().start();
+                currReturn.set(currImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currFluidInputs, currInputs));
+                currTime.set(stopwatch.stop().elapsed(TimeUnit.NANOSECONDS));
+            };
+            Runnable runNew = () -> {
+                stopwatch.reset().start();
+                newReturn.set(newImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, aFluidInputs, aInputs));
+                newTime.set(stopwatch.stop().elapsed(TimeUnit.NANOSECONDS));
+            };
+
+            // Due to stopwatch overhead, the first algorithm we run seems to incur a penalty of ~150ns.
+            // (The exact delay is probably heavily system-dependent)
+            // So, in an attempt to cancel this out, we will alternate which algorithm we run first.
+            if ((decreaseTotal + dontDecreaseTotal) % 2 == 1) {
+                runCurr.run();
+                runNew.run();
             } else {
-                currTimes.add(currTime);
+                runNew.run();
+                runCurr.run();
+            }
+
+            currTotal += currTime.get();
+            if (currTimes.size() > historyPos) {
+                currTimes.set(historyPos, currTime.get());
+            } else {
+                currTimes.add(currTime.get());
             }
             if (printTimes) {
                 log.error(
                         String.format(
                                 "[isRecipeInputEqual] Curr impl times: %d ns one run, %.3f ns over %d runs, %.3f ns overall",
-                                currTime, currTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
+                                currTime.get(), currTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
                                 currTimes.size(), ((double) currTotal) / (decreaseTotal + dontDecreaseTotal)));
             }
 
-            stopwatch.reset().start();
-            boolean newReturn = newImpl(aDecreaseStacksizeBySuccess, aDontCheckStackSizes, aFluidInputs, aInputs);
-            long newTime = stopwatch.stop().elapsed(TimeUnit.NANOSECONDS);
-            newTotal += newTime;
+            newTotal += newTime.get();
             if (newTimes.size() > historyPos) {
-                newTimes.set(historyPos, newTime);
+                newTimes.set(historyPos, newTime.get());
             } else {
-                newTimes.add(newTime);
+                newTimes.add(newTime.get());
             }
             if (printTimes) {
                 log.error(
                         String.format(
                                 "[isRecipeInputEqual] New impl times: %d ns one run, %.3f ns over %d runs, %.3f ns overall",
-                                newTime, newTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
+                                newTime.get(), newTimes.stream().mapToLong(Long::longValue).average().getAsDouble(),
                                 newTimes.size(), ((double) newTotal) / (decreaseTotal + dontDecreaseTotal)));
             }
 
-            if (currReturn != newReturn) {
+            if (currReturn.get() != newReturn.get()) {
                 log.error(
                         String.format(
                                 "[isRecipeInputEqual-diff] Got diffs in return (%s, %s, %s, %s) for:\n"
                                         + "Recipe: [%s], [%s]\nInputs: [%s], [%s]",
-                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn, newReturn,
+                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn.get(), newReturn.get(),
                                 Arrays.toString(mFluidInputs), Arrays.toString(mInputs),
                                 Arrays.toString(origFluidInputs), Arrays.toString(origInputs)));
             }
@@ -494,7 +516,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                         String.format(
                                 "[isRecipeInputEqual-diff] Got diffs in stacks (%s, %s, %s, %s) for:\n"
                                         + "Recipe: [%s], [%s]\nInputs: [%s], [%s]\nCurr stacks: [%s], [%s]\nNew stacks: [%s], [%s]",
-                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn, newReturn,
+                                aDecreaseStacksizeBySuccess, aDontCheckStackSizes, currReturn.get(), newReturn.get(),
                                 Arrays.toString(mFluidInputs), Arrays.toString(mInputs),
                                 Arrays.toString(origFluidInputs), Arrays.toString(origInputs),
                                 Arrays.toString(currFluidInputs), Arrays.toString(currInputs),
@@ -507,7 +529,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
                 printStopwatch.reset().start();
             }
 
-            return newReturn;
+            return newReturn.get();
         }
     }
 
@@ -642,7 +664,7 @@ public class GT_Recipe implements Comparable<GT_Recipe> {
             }
 
         HashSet<Integer> isVisited = new HashSet<>();
-        
+
         for (ItemStack tStack : mInputs) {
             ItemStack unified_tStack = GT_OreDictUnificator.get_nocopy(true, tStack);
             if (unified_tStack != null) {

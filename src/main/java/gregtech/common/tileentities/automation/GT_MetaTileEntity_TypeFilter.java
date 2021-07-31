@@ -26,7 +26,7 @@ public class GT_MetaTileEntity_TypeFilter extends GT_MetaTileEntity_Buffer {
     public OrePrefixes mPrefix = OrePrefixes.ore;
 
     public GT_MetaTileEntity_TypeFilter(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 11, new String[]{
+        super(aID, aName, aNameRegional, aTier, 10, new String[]{
                 "Filters 1 Item Type",
                 "Use Screwdriver to regulate output stack size",
                 "Does not consume energy to move Item"});

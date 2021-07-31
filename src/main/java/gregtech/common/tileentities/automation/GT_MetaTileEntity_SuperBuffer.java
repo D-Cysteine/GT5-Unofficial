@@ -13,7 +13,7 @@ import static gregtech.api.enums.Textures.BlockIcons.AUTOMATION_SUPERBUFFER_GLOW
 
 public class GT_MetaTileEntity_SuperBuffer extends GT_MetaTileEntity_ChestBuffer {
     public GT_MetaTileEntity_SuperBuffer(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 257, new String[]{
+        super(aID, aName, aNameRegional, aTier, 256, new String[]{
                 "Buffers up to 256 Item Stacks",
                 "Use Screwdriver to regulate output stack size",
                 "Does not consume energy to move Item",

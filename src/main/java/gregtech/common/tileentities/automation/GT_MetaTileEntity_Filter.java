@@ -20,7 +20,7 @@ public class GT_MetaTileEntity_Filter extends GT_MetaTileEntity_Buffer {
     public boolean bInvertFilter = false;
 
     public GT_MetaTileEntity_Filter(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 19, new String[]{
+        super(aID, aName, aNameRegional, aTier, 18, new String[]{
                 "Filters up to 9 different Items",
                 "Use Screwdriver to regulate output stack size",
                 "Does not consume energy to move Item"});

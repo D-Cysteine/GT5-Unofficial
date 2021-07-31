@@ -17,10 +17,10 @@ public class GT_Container_SuperBuffer extends GT_ContainerMetaTile_Machine {
 
     @Override
     public void addSlots(InventoryPlayer aInventoryPlayer) {
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 256, 8, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 256, 26, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 256, 44, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 256, 62, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 8, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 26, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 44, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 62, 63, false, true, 1));
     }
 
     @Override

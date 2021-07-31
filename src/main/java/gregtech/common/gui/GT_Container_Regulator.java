@@ -34,7 +34,7 @@ public class GT_Container_Regulator extends GT_ContainerMetaTile_Machine {
         addSlotToContainer(new Slot(this.mTileEntity, 7, 26, 42));
         addSlotToContainer(new Slot(this.mTileEntity, 8, 44, 42));
 
-        addSlotToContainer(new Slot(this.mTileEntity, 19, 44, 63));
+        addSlotToContainer(new Slot(this.mTileEntity, 18, 44, 63));
 
         addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 9, 64, 7, false, true, 1));
         addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 81, 7, false, true, 1));
@@ -46,17 +46,17 @@ public class GT_Container_Regulator extends GT_ContainerMetaTile_Machine {
         addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 16, 81, 41, false, true, 1));
         addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 17, 98, 41, false, true, 1));
 
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 119, 7, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 136, 7, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 153, 7, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 119, 24, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 136, 24, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 153, 24, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 119, 41, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 136, 41, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 153, 41, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 119, 7, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 136, 7, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 153, 7, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 119, 24, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 136, 24, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 153, 24, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 119, 41, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 136, 41, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 153, 41, false, true, 1));
 
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 18, 8, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 8, 63, false, true, 1));
     }
 
     @Override

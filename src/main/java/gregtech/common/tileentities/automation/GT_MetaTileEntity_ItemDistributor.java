@@ -23,7 +23,7 @@ public class GT_MetaTileEntity_ItemDistributor extends GT_MetaTileEntity_Buffer 
     private byte currentSide = 0, currentSideItemCount = 0;
 
     public GT_MetaTileEntity_ItemDistributor(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 28, new String[]{
+        super(aID, aName, aNameRegional, aTier, 27, new String[]{
                 "Distributes Items between different Machine Sides",
                 "Default Items per Machine Side: 0",
                 "Use Screwdriver to increase/decrease Items per Side",
@@ -47,21 +47,6 @@ public class GT_MetaTileEntity_ItemDistributor extends GT_MetaTileEntity_Buffer 
     public IMetaTileEntity newMetaEntity(IGregTechTileEntity aTileEntity) {
         return new GT_MetaTileEntity_ItemDistributor(this.mName, this.mTier, this.mInventory.length, this.mDescriptionArray,
                 this.mTextures);
-    }
-
-    @Override
-    protected void fillStacksIntoFirstSlots() {
-        // The last slot of mInventory is invalid, so we need to avoid iterating over it.
-        // Thus all max indices are reduced by 1 here.
-        for (int i = 0; i < this.mInventory.length - 2; i++) {
-            for (int j = i + 1; j < this.mInventory.length - 1; j++) {
-                if ((this.mInventory[j] != null)
-                        && ((this.mInventory[i] == null) || (GT_Utility.areStacksEqual(this.mInventory[i], this.mInventory[j])))) {
-                    GT_Utility.moveStackFromSlotAToSlotB(getBaseMetaTileEntity(), getBaseMetaTileEntity(), j, i, (byte) 64, (byte) 1,
-                            (byte) 64, (byte) 1);
-                }
-            }
-        }
     }
 
     @Override
@@ -114,11 +99,6 @@ public class GT_MetaTileEntity_ItemDistributor extends GT_MetaTileEntity_Buffer 
     @Override
     public boolean isOutputFacing(byte aSide) {
         return getBaseMetaTileEntity().getFrontFacing() != aSide && itemsPerSide[aSide] > 0;
-    }
-
-    @Override
-    public boolean isValidSlot(int aIndex) {
-        return aIndex < this.mInventory.length - 1;
     }
 
     @Override

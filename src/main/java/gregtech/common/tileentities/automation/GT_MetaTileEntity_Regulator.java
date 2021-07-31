@@ -24,7 +24,7 @@ public class GT_MetaTileEntity_Regulator
     private boolean charge = false, decharge = false;
 
     public GT_MetaTileEntity_Regulator(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 20, new String[]{
+        super(aID, aName, aNameRegional, aTier, 19, new String[]{
                 "Filters up to 9 different Items",
                 "Allows Item-specific output stack size",
                 "Allows Item-specific output slot",
@@ -119,12 +119,12 @@ public class GT_MetaTileEntity_Regulator
 
     @Override
     public int rechargerSlotStartIndex() {
-        return 19;
+        return 18;
     }
 
     @Override
     public int dechargerSlotStartIndex() {
-        return 19;
+        return 18;
     }
 
     @Override

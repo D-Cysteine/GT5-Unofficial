@@ -26,7 +26,7 @@ public class GT_MetaTileEntity_ChestBuffer extends GT_MetaTileEntity_Buffer {
 
 
     public GT_MetaTileEntity_ChestBuffer(int aID, String aName, String aNameRegional, int aTier) {
-        super(aID, aName, aNameRegional, aTier, 28, new String[]{
+        super(aID, aName, aNameRegional, aTier, 27, new String[]{
                 "Buffers up to 27 Item Stacks",
                 "Use Screwdriver to regulate output stack size",
                 "Does not consume energy to move Item",
@@ -61,9 +61,12 @@ public class GT_MetaTileEntity_ChestBuffer extends GT_MetaTileEntity_Buffer {
                 TextureFactory.builder().addIcon(AUTOMATION_CHESTBUFFER_GLOW).glow().build());
     }
 
+    /**
+     * If you want to modify or override this, you need to also update {@link #sortStacks()} to only sort valid slots!
+     */
     @Override
-    public boolean isValidSlot(int aIndex) {
-        return aIndex < this.mInventory.length - 1;
+    public final boolean isValidSlot(int aIndex) {
+        return true;
     }
 
     @Override
@@ -84,8 +87,7 @@ public class GT_MetaTileEntity_ChestBuffer extends GT_MetaTileEntity_Buffer {
         }
     }
 
-// Implementation using Java built in sort algorithm
-// Uses terribad string comparison to sort against.  Would be better if we did something else?
+    // Implementation using Java built in sort algorithm
     protected void sortStacks() {
         Arrays.sort(this.mInventory, new Comparator<ItemStack>() {
                 @Override
@@ -124,22 +126,7 @@ public class GT_MetaTileEntity_ChestBuffer extends GT_MetaTileEntity_Buffer {
     @Override
     protected void fillStacksIntoFirstSlots() {
         sortStacks();
-        // Merge small stacks together
-        // The last slot of mInventory is invalid, so we need to avoid iterating over it.
-        // Thus all max indices are reduced by 1 here.
-        for (int i = 0; i < this.mInventory.length - 2;) {
-            //GT_FML_LOGGER.info( (this.mInventory[i] == null) ? "Slot empty " + i : "Slot " + i + " holds " + this.mInventory[i].getDisplayName());
-            for (int j = i + 1; j < this.mInventory.length - 1; j++) {
-                if ((this.mInventory[j] != null) && ((GT_Utility.areStacksEqual(this.mInventory[i], this.mInventory[j])))) {
-                    GT_Utility.moveStackFromSlotAToSlotB(getBaseMetaTileEntity(), getBaseMetaTileEntity(), j, i, (byte) 64, (byte) 1, (byte) 64, (byte) 1);
-                    //GT_FML_LOGGER.info( "Moving slot " + j + " into slot " +  i );
-                }
-                else {
-                    i=j;
-                    break; // No more matching items for this i, do next i
-                }
-            }
-        }
+        super.fillStacksIntoFirstSlots();
     }
 
     @Override

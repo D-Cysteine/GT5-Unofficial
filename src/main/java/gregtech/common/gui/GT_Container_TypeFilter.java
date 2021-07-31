@@ -30,11 +30,11 @@ public class GT_Container_TypeFilter extends GT_ContainerMetaTile_Machine {
 
         addSlotToContainer(new GT_Slot_Render(this.mTileEntity, 9, 35, 23));
 
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 8, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 26, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 44, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 62, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 10, 80, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 8, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 26, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 44, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 62, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 80, 63, false, true, 1));
     }
 
     @Override

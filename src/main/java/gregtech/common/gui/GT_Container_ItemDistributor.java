@@ -22,9 +22,9 @@ public class GT_Container_ItemDistributor extends GT_ContainerMetaTile_Machine {
                 addSlotToContainer(new Slot(this.mTileEntity, x + y * 9, 8 + x * 18, 5 + y * 18));
             }
         }
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 27, 8, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 27, 26, 63, false, true, 1));
-        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, 27, 44, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 8, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 26, 63, false, true, 1));
+        addSlotToContainer(new GT_Slot_Holo(this.mTileEntity, -1, 44, 63, false, true, 1));
     }
 
     @Override

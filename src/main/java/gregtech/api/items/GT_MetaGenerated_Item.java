@@ -67,6 +67,16 @@ public abstract class GT_MetaGenerated_Item extends GT_MetaBase_Item implements 
     public final BitSet mVisibleItems;
     public final IIcon[][] mIconList;
 
+    /**
+     * Meta-data values in this bitset will be rendered with a cell fluid window.
+     *
+     * <p>This is intended for use with custom-added fluid containers (i.e. beyond the offset), so
+     * check the bitset with: {@code mFluidRenderingItems.get(metaData - mOffset)}
+     *
+     * @see gregtech.common.render.GT_MetaGenerated_Item_Renderer#renderItem
+     */
+    public final BitSet mFluidRenderingItems;
+
     public final ConcurrentHashMap<Short, IFoodStat> mFoodStats = new ConcurrentHashMap<Short, IFoodStat>();
     public final ConcurrentHashMap<Short, Long[]> mElectricStats = new ConcurrentHashMap<Short, Long[]>();
     public final ConcurrentHashMap<Short, Long[]> mFluidContainerStats = new ConcurrentHashMap<Short, Long[]>();
@@ -84,6 +94,7 @@ public abstract class GT_MetaGenerated_Item extends GT_MetaBase_Item implements 
         setMaxDamage(0);
         mEnabledItems = new BitSet(aItemAmount);
         mVisibleItems = new BitSet(aItemAmount);
+        mFluidRenderingItems = new BitSet(aItemAmount);
 
         mOffset = (short) Math.min(32766, aOffset);
         mItemAmount = (short) Math.min(aItemAmount, 32766 - mOffset);

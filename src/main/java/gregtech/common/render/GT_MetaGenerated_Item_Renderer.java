@@ -1,5 +1,6 @@
 package gregtech.common.render;
 
+import gregtech.api.enums.TextureSet;
 import gregtech.api.interfaces.IIconContainer;
 import gregtech.api.items.GT_MetaGenerated_Item;
 import gregtech.api.util.GT_Utility;
@@ -141,6 +142,38 @@ public class GT_MetaGenerated_Item_Renderer implements IItemRenderer {
             } else {
                 tIcon = aItem.mIconList[(aMetaData - aItem.mOffset)][0];
             }
+
+            if (aItem.mFluidRenderingItems.get(aMetaData - aItem.mOffset)) {
+                FluidStack tFluid = GT_Utility.getFluidForFilledItem(aStack, true);
+                if ((tFluid != null) && (tFluid.getFluid() != null)) {
+                    IIcon tFluidIcon = tFluid.getFluid().getIcon(tFluid);
+                    if (tFluidIcon != null) {
+                        // This is the standard fluid cell window icon.
+                        // If you want to add a fluid container that has a larger window, then it
+                        // will be necessary to add some way to get a custom window icon here.
+                        IIcon windowIcon = TextureSet.SET_FLUID.mTextures[30].getIcon();
+                        if (type.equals(IItemRenderer.ItemRenderType.INVENTORY)) {
+                            GT_RenderUtil.renderItemIcon(windowIcon, 16.0D, 0.001D, 0.0F, 0.0F, -1.0F);
+                        } else {
+                            ItemRenderer.renderItemIn2D(Tessellator.instance, windowIcon.getMaxU(), windowIcon.getMinV(), windowIcon.getMinU(), windowIcon.getMaxV(), windowIcon.getIconWidth(), windowIcon.getIconHeight(), 0.0625F);
+                        }
+
+                        int tColor = tFluid.getFluid().getColor(tFluid);
+                        GL11.glColor3f((tColor >> 16 & 0xFF) / 255.0F, (tColor >> 8 & 0xFF) / 255.0F, (tColor & 0xFF) / 255.0F);
+                        Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+                        GL11.glBlendFunc(770, 771);
+                        GL11.glDepthFunc(514);
+                        if (type.equals(IItemRenderer.ItemRenderType.INVENTORY)) {
+                            GT_RenderUtil.renderItemIcon(tFluidIcon, 16.0D, 0.001D, 0.0F, 0.0F, -1.0F);
+                        } else {
+                            ItemRenderer.renderItemIn2D(Tessellator.instance, tFluidIcon.getMaxU(), tFluidIcon.getMinV(), tFluidIcon.getMinU(), tFluidIcon.getMaxV(), tFluidIcon.getIconWidth(), tFluidIcon.getIconHeight(), 0.0625F);
+                        }
+                        GL11.glDepthFunc(515);
+                        GL11.glColor3f(1.0F, 1.0F, 1.0F);
+                    }
+                }
+            }
+
             Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationItemsTexture);
             GL11.glBlendFunc(770, 771);
             if (type.equals(IItemRenderer.ItemRenderType.INVENTORY)) {

@@ -162,8 +162,8 @@ public abstract class GT_Proxy implements IGT_Mod, IGuiHandler, IFuelHandler {
     public boolean mAchievements = true;
     public boolean mAE2Integration = true;
     public boolean mArcSmeltIntoAnnealed = true;
-    public boolean mMagneticraftRecipes = true;
-    public boolean mImmersiveEngineeringRecipes = true;
+    public boolean mMagneticraftRecipes = false;
+    public boolean mImmersiveEngineeringRecipes = false;
     private boolean isFirstServerWorldTick = true;
     private boolean mOreDictActivated = false;
     public boolean mChangeHarvestLevels=false;
@@ -212,7 +212,7 @@ public abstract class GT_Proxy implements IGT_Mod, IGuiHandler, IFuelHandler {
     public double[] mPollutionGasTurbineReleasedByTier = new double[]{0.1, 1.0, 0.9, 0.8};
     public final GT_UO_DimensionList mUndergroundOil = new GT_UO_DimensionList();
     public int mTicksUntilNextCraftSound = 0;
-    public double mMagneticraftBonusOutputPercent = 100.0d;
+    public double mMagneticraftBonusOutputPercent = 0d;
     private World mUniverse = null;
     private final String aTextForestry = "Forestry";
     private final String aTextArsmagica2 = "arsmagica2";
@@ -1775,7 +1775,7 @@ public abstract class GT_Proxy implements IGT_Mod, IGuiHandler, IFuelHandler {
         // If we have something from the GT MetaGenerated_Item, ItemFuelValue, or OreDict return
         if (rFuelValue > 0) return rFuelValue;
         
-        // Otherwise a few more checks
+        // Otherwise, a few more checks
         if (GT_Utility.areStacksEqual(aFuel, new ItemStack(Blocks.wooden_button, 1)))    return 150; 
         else if (GT_Utility.areStacksEqual(aFuel, new ItemStack(Blocks.ladder, 1)))      return 100; 
         else if (GT_Utility.areStacksEqual(aFuel, new ItemStack(Items.sign, 1)))         return 600; 
